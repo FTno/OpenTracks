@@ -85,7 +85,9 @@ public class MarkerEditActivity extends AbstractActivity {
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.marker_types, android.R.layout.simple_dropdown_item_1line);
         viewBinding.markerEditMarkerType.setAdapter(adapter);
         viewBinding.markerEditPhotoDelete.setOnClickListener(v -> {
-            viewModel.onPhotoDelete();
+            viewModel.onPhotoDelete(viewBinding.markerEditName.getText().toString(),
+                    viewBinding.markerEditMarkerType.getText().toString(),
+                    viewBinding.markerEditDescription.getText().toString());
         });
 
         viewBinding.markerEditCancel.setOnClickListener(v -> {
@@ -158,14 +160,20 @@ public class MarkerEditActivity extends AbstractActivity {
                 Toast.makeText(this, R.string.marker_add_photo_canceled, Toast.LENGTH_LONG).show();
                 return;
             } else if (resultCode == RESULT_OK) {
-                viewModel.onNewCameraPhoto(cameraPhotoUri);
+                viewModel.onNewCameraPhoto(cameraPhotoUri,
+                        viewBinding.markerEditName.getText().toString(),
+                        viewBinding.markerEditMarkerType.getText().toString(),
+                        viewBinding.markerEditDescription.getText().toString());
             }
         } else if (requestCode == GALLERY_IMG_REQUEST_CODE) {
             if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, R.string.marker_add_photo_canceled, Toast.LENGTH_LONG).show();
                 return;
             } else if (resultCode == RESULT_OK)  {
-                viewModel.onNewGalleryPhoto(data.getData());
+                viewModel.onNewGalleryPhoto(data.getData(),
+                        viewBinding.markerEditName.getText().toString(),
+                        viewBinding.markerEditMarkerType.getText().toString(),
+                        viewBinding.markerEditDescription.getText().toString());
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

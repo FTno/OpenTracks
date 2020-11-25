@@ -14,6 +14,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.util.NoSuchElementException;
 
 import de.dennisguse.opentracks.R;
 import de.dennisguse.opentracks.content.data.Marker;
@@ -70,41 +71,46 @@ public class MarkerEditViewModel extends AndroidViewModel {
         markerData.postValue(marker);
     }
 
+    private Marker getMarkerOrThrowException() {
+        Marker marker = markerData != null ? markerData.getValue() : null;
+        if (marker == null) {
+            Log.d(TAG, "Marker data shouldn't be null. Call getMarkerData before.");
+            throw new NoSuchElementException("Marker data shouldn't be null. Call getMarkerData before.");
+        }
+
+        return marker;
+    }
+
     private void deletePhoto(Uri photoUri) {
         File photoFile = FileUtils.getPhotoFileIfExists(getApplication(), markerData.getValue().getTrackId(), photoUri);
         FileUtils.deleteDirectoryRecurse(photoFile);
     }
 
-    public void onPhotoDelete() {
-        Marker marker = markerData.getValue();
-        if (marker == null) {
-            return;
-        }
-
+    public void onPhotoDelete(String name, String category, String description) {
+        Marker marker =  getMarkerOrThrowException();
         if (marker.hasPhoto()) {
             if (!marker.getPhotoURI().equals(photoOriginalUri)) {
                 deletePhoto(marker.getPhotoURI());
             }
             marker.setPhotoUrl(null);
+            marker.setName(name);
+            marker.setCategory(category);
+            marker.setDescription(description);
             markerData.postValue(marker);
         }
     }
 
-    public void onNewCameraPhoto(@NonNull Uri photoUri) {
-        Marker marker = markerData.getValue();
-        if (marker == null) {
-            return;
-        }
-
+    public void onNewCameraPhoto(@NonNull Uri photoUri, String name, String category, String description) {
+        Marker marker =  getMarkerOrThrowException();
         marker.setPhotoUrl(photoUri.toString());
+        marker.setName(name);
+        marker.setCategory(category);
+        marker.setDescription(description);
         markerData.postValue(marker);
     }
 
-    public void onNewGalleryPhoto(@NonNull Uri srcUri) {
-        Marker marker = markerData.getValue();
-        if (marker == null) {
-            return;
-        }
+    public void onNewGalleryPhoto(@NonNull Uri srcUri, String name, String category, String description) {
+        Marker marker =  getMarkerOrThrowException();
 
         try (ParcelFileDescriptor parcelFd = getApplication().getContentResolver().openFileDescriptor(srcUri, "r")) {
             FileDescriptor srcFd = parcelFd.getFileDescriptor();
@@ -113,6 +119,9 @@ public class MarkerEditViewModel extends AndroidViewModel {
 
             Uri photoUri = FileUtils.getUriForFile(getApplication(), dstFile);
             marker.setPhotoUrl(photoUri.toString());
+            marker.setName(name);
+            marker.setCategory(category);
+            marker.setDescription(description);
             markerData.postValue(marker);
         } catch(Exception e) {
             Log.e(TAG, e.getMessage());
@@ -136,10 +145,7 @@ public class MarkerEditViewModel extends AndroidViewModel {
     }
 
     public void onDone(String name, String category, String description) {
-        Marker marker = markerData.getValue();
-        if (marker == null) {
-            return;
-        }
+        Marker marker = getMarkerOrThrowException();
 
         if (isNewMarker) {
             onAddDone(marker, name, category, description);
@@ -149,11 +155,7 @@ public class MarkerEditViewModel extends AndroidViewModel {
     }
 
     public void onCancel() {
-        Marker marker = markerData.getValue();
-        if (marker == null) {
-            return;
-        }
-
+        Marker marker =  getMarkerOrThrowException();
         if (isNewMarker) {
             if (marker.hasPhoto()) {
                 deletePhoto(marker.getPhotoURI());
